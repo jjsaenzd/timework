@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Asignación de Tiempo</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --primary:#2563eb;
+      --primary-dark:#1d4ed8;
+      --border:#dbe3ef;
+      --success:#0f766e;
+      --soft:#eef4ff;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Segoe UI, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .container{
+      width:100%;
+      max-width:850px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:18px;
+      box-shadow:0 12px 35px rgba(15,23,42,.08);
+      padding:30px;
+      border:1px solid #edf1f7;
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size:28px;
+    }
+
+    .subtitle{
+      color:var(--muted);
+      margin-bottom:28px;
+      line-height:1.5;
+    }
+
+    .section{
+      margin-bottom:24px;
+    }
+
+    label.title{
+      display:block;
+      font-weight:700;
+      margin-bottom:10px;
+    }
+
+    .days{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:10px;
+    }
+
+    .day-option input{
+      display:none;
+    }
+
+    .day-option span{
+      display:block;
+      text-align:center;
+      padding:12px 8px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      cursor:pointer;
+      transition:.2s;
+      user-select:none;
+    }
+
+    .day-option input:checked + span{
+      background:var(--primary);
+      border-color:var(--primary);
+      color:white;
+      font-weight:700;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .field label{
+      display:block;
+      font-size:14px;
+      font-weight:600;
+      margin-bottom:7px;
+    }
+
+    .field input{
+      width:100%;
+      padding:12px 13px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      font-size:16px;
+      outline:none;
+    }
+
+    .field input:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(37,99,235,.10);
+    }
+
+    .hint{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:6px;
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      margin-top:24px;
+    }
+
+    button{
+      border:none;
+      border-radius:10px;
+      padding:12px 18px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .primary{
+      background:var(--primary);
+      color:white;
+    }
+
+    .primary:hover{
+      background:var(--primary-dark);
+    }
+
+    .secondary{
+      background:#eef2f7;
+      color:var(--text);
+    }
+
+    .result{
+      display:none;
+      margin-top:28px;
+      background:var(--soft);
+      border:1px solid #cfe0ff;
+      border-radius:14px;
+      padding:22px;
+    }
+
+    .result h2{
+      margin-top:0;
+      font-size:21px;
+    }
+
+    .summary{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin:16px 0 20px;
+    }
+
+    .metric{
+      background:white;
+      border:1px solid #dce8ff;
+      border-radius:12px;
+      padding:14px;
+    }
+
+    .metric .label{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:4px;
+    }
+
+    .metric .value{
+      font-size:20px;
+      font-weight:800;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:white;
+      border-radius:12px;
+      overflow:hidden;
+    }
+
+    th,td{
+      padding:12px 14px;
+      border-bottom:1px solid #edf1f6;
+      text-align:left;
+    }
+
+    th{
+      background:#f8fafc;
+      font-size:13px;
+    }
+
+    .formula{
+      margin-top:18px;
+      font-size:14px;
+      line-height:1.6;
+      color:#374151;
+    }
+
+    .error{
+      display:none;
+      margin-top:16px;
+      padding:12px 14px;
+      background:#fff1f2;
+      color:#b42318;
+      border:1px solid #fecdd3;
+      border-radius:10px;
+      font-size:14px;
+    }
+
+    @media(max-width:700px){
+      .days{grid-template-columns:1fr 1fr}
+      .grid,.summary{grid-template-columns:1fr}
+      .card{padding:22px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Calculadora de Asignación de Tiempo</h1>
+      <div class="subtitle">
+        Selecciona los días y configura los horarios de cada jornada. Ingresa las horas laborales totales y el porcentaje de asignación.
+        La calculadora distribuirá proporcionalmente el tiempo según las horas de cada jornada seleccionada y mostrará el resultado en horas y minutos.
+      </div>
+
+      <div class="section">
+        <label class="title">1. Días de la semana a laborar</label>
+        <div class="days">
+          <label class="day-option">
+            <input type="checkbox" value="Lunes" checked>
+            <span>Lunes</span>
+          </label>
+          <label class="day-option">
+            <input type="checkbox" value="Martes" checked>
+            <span>Martes</span>
+          </label>
+          <label class="day-option">
+            <input type="checkbox" value="Miércoles" checked>
+            <span>Miércoles</span>
+          </label>
+          <label class="day-option">
+            <input type="checkbox" value="Jueves" checked>
+            <span>Jueves</span>
+          </label>
+          <label class="day-option">
+            <input type="checkbox" value="Viernes" checked>
+            <span>Viernes</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="schedule" class="grid" style="margin-bottom:22px"></div>
+      <p class="hint">Horarios predeterminados: lunes a jueves 08:30–18:30 y viernes 08:30–12:30. Se descuenta automáticamente el refrigerio de 13:00 a 14:00 cuando coincide con la jornada. Puedes modificarlo abajo.</p>
+      <div class="grid" style="margin-bottom:20px"><div class="field"><label for="lunchStart">Inicio de refrigerio</label><input type="time" id="lunchStart" value="13:00"></div><div class="field"><label for="lunchEnd">Fin de refrigerio</label><input type="time" id="lunchEnd" value="14:00"></div></div>
+      <div class="grid">
+        <div class="field">
+          <label for="hours">2. Horas laborales totales</label>
+          <input id="hours" type="number" min="0" step="0.01" value="40">
+          <div class="hint">Ejemplo: 40 horas efectivas semanales, descontando 1 hora de refrigerio de lunes a jueves.</div>
+        </div>
+
+        <div class="field">
+          <label for="percentage">3. Porcentaje de asignación</label>
+          <input id="percentage" type="number" min="0" max="100" step="0.01" value="13.5">
+          <div class="hint">Ejemplo: 13.5% del tiempo laboral.</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" onclick="calculate()">Calcular asignación</button>
+        <button class="secondary" onclick="resetCalculator()">Limpiar</button>
+      </div>
+
+      <div id="error" class="error"></div>
+
+      <div id="result" class="result">
+        <h2>Resultado</h2>
+
+        <div class="summary">
+          <div class="metric">
+            <div class="label">Días seleccionados</div>
+            <div class="value" id="metricDays">0</div>
+          </div>
+          <div class="metric">
+            <div class="label">Tiempo total asignado</div>
+            <div class="value" id="metricTotal">0 h 00 min</div>
+          </div>
+          <div class="metric">
+            <div class="label">Distribución diaria</div>
+            <div class="value" id="metricDaily">0 h 00 min</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Día</th>
+              <th>Tiempo asignado</th>
+              <th>Minutos</th>
+            </tr>
+          </thead>
+          <tbody id="dayRows"></tbody>
+        </table>
+
+        <div class="formula" id="formula"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const names=['Lunes','Martes','Miércoles','Jueves','Viernes'];
+const schedule=document.getElementById('schedule');
+function initSchedule(){schedule.innerHTML=names.map((d,i)=>`<div class="field"><label>${d}: entrada / salida</label><div style="display:flex;gap:8px"><input type="time" id="start${i}" value="08:30"><input type="time" id="end${i}" value="${i===4?'12:30':'18:30'}"></div></div>`).join('')}
+function minOf(v){const a=v.split(':').map(Number);return a.length===2?a[0]*60+a[1]:NaN}
+function minutesToText(m){m=Math.round(m);return `${Math.floor(m/60)} h ${String(m%60).padStart(2,'0')} min`}
+function showError(t){let e=document.getElementById('error');e.textContent=t;e.style.display='block'}
+function calculate(){
+let result=document.getElementById('result'),error=document.getElementById('error');result.style.display='none';error.style.display='none';
+let hours=Number(document.getElementById('hours').value),pct=Number(document.getElementById('percentage').value);
+if(!Number.isFinite(hours)||hours<=0||!Number.isFinite(pct)||pct<0||pct>100){showError('Ingresa horas mayores que cero y un porcentaje entre 0 y 100.');return}
+let days=[];let ls=minOf(document.getElementById('lunchStart').value),le=minOf(document.getElementById('lunchEnd').value);if(!Number.isFinite(ls)||!Number.isFinite(le)||le<=ls){showError('Revisa el horario de refrigerio.');return}
+for(let i=0;i<5;i++){if(!document.querySelectorAll('.day-option input')[i].checked)continue;let st=minOf(document.getElementById('start'+i).value),en=minOf(document.getElementById('end'+i).value);if(!Number.isFinite(st)||!Number.isFinite(en)||en<=st){showError('Revisa los horarios: la salida debe ser posterior a la entrada.');return}let lunch=Math.max(0,Math.min(en,le)-Math.max(st,ls));if(en-st-lunch<=0){showError("La jornada efectiva debe ser mayor a cero.");return}days.push({name:names[i],minutes:en-st-lunch,lunch})}
+if(!days.length){showError('Selecciona al menos un día.');return}
+let capacity=days.reduce((s,d)=>s+d.minutes,0),total=hours*60*pct/100;
+if(total>capacity+1e-7){showError('El tiempo asignado supera las horas disponibles en los días seleccionados.');return}
+let target=Math.round(total),exact=days.map(d=>total*d.minutes/capacity),alloc=exact.map(Math.floor),remaining=target-alloc.reduce((a,b)=>a+b,0);
+let order=exact.map((v,i)=>({i,frac:v-Math.floor(v)})).sort((a,b)=>b.frac-a.frac||a.i-b.i);
+for(let i=0;i<remaining;i++)alloc[order[i].i]++;
+document.getElementById('metricDays').textContent=days.length;
+document.getElementById('metricTotal').textContent=minutesToText(target);
+document.getElementById('metricDaily').textContent='Variable';
+document.getElementById('dayRows').innerHTML=days.map((d,i)=>`<tr><td>${d.name} (${minutesToText(d.minutes)} efectivas; refrigerio ${minutesToText(d.lunch)})</td><td><strong>${minutesToText(alloc[i])}</strong></td><td>${alloc[i]} min</td></tr>`).join('');
+document.getElementById('formula').innerHTML=`<strong>Cálculo proporcional:</strong> ${hours} h × ${pct}% = ${minutesToText(target)} asignados. Se descuenta el refrigerio coincidente con cada jornada. Cada día recibe una proporción según su duración efectiva respecto de las ${minutesToText(capacity)} disponibles en los días seleccionados. Los minutos se redondean conservando el total.`;
+result.style.display='block';
+}
+function resetCalculator(){document.querySelectorAll('.day-option input').forEach((x,i)=>x.checked=true);document.getElementById('hours').value=40;document.getElementById('lunchStart').value='13:00';document.getElementById('lunchEnd').value='14:00';document.getElementById('percentage').value=13.5;initSchedule();calculate()}
+initSchedule();calculate();
+</script>
+</body>
+</html>
